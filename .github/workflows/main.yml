@@ -1,0 +1,37 @@
+name: Process List Files
+
+on:
+  push:
+    branches:
+      - main  # 你可以根据需要更改分支
+
+jobs:
+  process-files:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Pull upstream changes
+      run: |
+        git remote add upstream https://github.com/upstream-owner/upstream-repo.git
+        git fetch upstream
+        git merge upstream/main
+
+    - name: Process .list files
+      run: |
+        mkdir -p list
+        for file in geo/geosite/*.list; do
+          sed 's/+//g' "$file" > "list/$(basename "$file")"
+        done
+
+    - name: Commit and push changes
+      run: |
+        git add list/
+        git commit -m "Processed list files"
+        git push
